@@ -40,7 +40,9 @@ We start from installing Spark operator on Kubernetes cluster. In your terminal,
 .. code-block:: shell
 
     helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+
     [microk8s] kubectl config view --raw > ~/.kube/config
+
     helm install my-release spark-operator/spark-operator --namespace kubeflow
 
 To confirm your Spark operator is on, run ``[microk8s] kubectl get pods -n kubeflow``, and you should see pods with name such 
@@ -52,7 +54,7 @@ Create Spark Service Account and add permissions
 
 In this example, we will create a service account called ``spark-sa`` to run the ML pipeline with Spark job.
 
-First create the YAML file for the service account.
+First create the YAML file for the service account. In your VM, create following YAML file:
 
 .. code-block:: yaml
 
@@ -60,12 +62,12 @@ First create the YAML file for the service account.
     kind: ServiceAccount
     metadata:
       name: spark-sa
-      namespace: admin
+      namespace: kubeflow
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
-      namespace: admin
+      namespace: kubeflow
       name: spark-role
     rules:
     - apiGroups: [""]
@@ -79,11 +81,11 @@ First create the YAML file for the service account.
     kind: RoleBinding
     metadata:
       name: spark-role-binding
-      namespace: admin
+      namespace: kubeflow
     subjects:
     - kind: ServiceAccount
       name: spark-sa
-      namespace: admin
+      namespace: kubeflow
     roleRef:
       kind: Role
       name: spark-role
@@ -131,7 +133,9 @@ The overall workflow of Spark job in Kubeflow pipeline is shown in below figure.
 Import packages and define global variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Import packages and define global variables needed for this example.
+On your Kubeflow web UI, connect to a Notebook Server, and create a notebook (i.e., ``.ipynb`` file).
+
+In the notebook, first mport packages and define global variables needed for this example.
 
 .. code-block:: python
 
@@ -151,13 +155,16 @@ Define Spark job application
 
 In this example, we will create a simple Spark job that calculates an approximate value of Pi(π). Below is the YAML file.
 
+We will name it ``spark-job-python.yaml``. And we suggest you put it under the same path with your notebook.
+
 .. code-block:: yaml
+    :caption: spark-job-python.yaml
 
     apiVersion: "sparkoperator.k8s.io/v1beta2"
     kind: SparkApplication
     metadata:
-    name: pyspark-pi-{epoch}
-    namespace: admin
+      name: pyspark-pi-{epoch}
+      namespace: admin
     spec:
       type: Python
       pythonVersion: "3"
@@ -177,23 +184,25 @@ In this example, we will create a simple Spark job that calculates an approximat
         coreLimit: "1200m"
         memory: "512m"
         labels:
-        version: 3.1.1
+          version: 3.1.1
         serviceAccount: spark-sa
       executor:
         cores: 1
         instances: 1
         memory: "512m"
         labels:
-        version: 3.1.1
+          version: 3.1.1
 
-We then define following function to get the Spark job definition. It reads the Spark Operator job manifest file and returns 
-the corresponding dictionary and add some randomness in the job name.
+We then define following function to get the Spark job definition in the notebook. It reads the Spark Operator job manifest file and returns 
+the corresponding dictionary and add some randomness in the job name. 
+
+**Note:** If you name your Spark job definition YAML file differently, remember to change the ``spark-job-python.yaml`` to your own.
 
 .. code-block:: python
 
     def get_spark_job_definition():
         # Read manifest file
-        with open("<spark_job_definition_yaml_file>", "r") as stream:
+        with open("spark-job-python.yaml", "r") as stream:
             spark_job_manifest = yaml.safe_load(stream)
 
         # Add epoch time in the job name
@@ -209,17 +218,18 @@ Apply the Spark job manifest file and create the job
 As explained in :ref:`workflow overview`, our next step is to use *k8s apply component* to load the Spark job manifest file 
 and create the corresponding ``sparkapplication`` resource in the cluster.
 
-Define the *k8s apply component* using following YAML file:
+Define the *k8s apply component* using following YAML file. We will name it ``k8s-apply-component.yaml``. And we suggest you put it under the same path with your notebook.
 
 .. code-block:: yaml
+    :caption: k8s-apply-component.yaml
 
     name: Apply Kubernetes object
     inputs:
-    - {name: Object, type: JsonObject}
+      - {name: Object, type: JsonObject}
     outputs:
-    - {name: Name, type: String}
-    - {name: Kind, type: String}
-    - {name: Object, type: JsonObject}
+      - {name: Name, type: String}
+      - {name: Kind, type: String}
+      - {name: Object, type: JsonObject}
     metadata:
       annotations:
         author: Alexey Volkov <alexey.volkov@ark-kun.com>
@@ -258,18 +268,19 @@ and it will iterate until the job achieves "COMPLETED" state.
 The iteration would be done using recursion and the ``dsl.Condition`` instruction, and we will use ``@graph_component`` decorator 
 to indicate the recursive execution for the function.
 
-The *k8s get component* is defined using following YAML file:
+The *k8s get component* is defined using following YAML file. We will name it ``k8s-get-component.yaml``. And we suggest you put it under the same path with your notebook.
 
 .. code-block:: yaml
+    :caption: k8s-get-component.yaml
 
     name: Get Kubernetes object
     inputs:
-    - {name: Name, type: String}
-    - {name: Kind, type: String}
+      - {name: Name, type: String}
+      - {name: Kind, type: String}
     outputs:
-    - {name: Name, type: String}
-    - {name: ApplicationState, type: String}
-    - {name: Object, type: JsonObject}
+      - {name: Name, type: String}
+      - {name: ApplicationState, type: String}
+      - {name: Object, type: JsonObject}
     metadata:
       annotations:
         author: Alexey Volkov <alexey.volkov@ark-kun.com>
@@ -297,13 +308,15 @@ The *k8s get component* is defined using following YAML file:
           - {outputPath: ApplicationState}
           - {outputPath: Object}
 
-Above executions are defined in following function:
+Above get component executions are defined in following function in the notebook.
+
+**Note:** If you name your get component YAML file differently, remember to change the ``k8s-get-component.yaml`` to your own.
 
 .. code-block:: python
 
     @dsl.graph_component
     def graph_component_spark_app_status(input_application_name):
-        k8s_get_op = comp.load_component_from_file("<k8s_get_component_definition_yaml_file>")
+        k8s_get_op = comp.load_component_from_file("k8s-get-component.yaml")
         check_spark_application_status_op = k8s_get_op(
             name=input_application_name,
             kind=SPARK_APPLICATION_KIND
@@ -321,7 +334,7 @@ Once the Spark application is completed, the execution will carry on with other 
 Define print messages function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before defining our final pipeline, we spend some time defining following function to print messages.
+Before defining our final pipeline, we spend some time defining following function to print messages in the notebook.
 
 .. code-block:: python
 
@@ -338,7 +351,10 @@ Before defining our final pipeline, we spend some time defining following functi
 Define the pipeline
 ^^^^^^^^^^^^^^^^^^^
 
-We can now define our final pipeline using above functions.
+We can now define our final pipeline using above functions in the notebook.
+
+**Note:** If you name your apply component YAML file differently, remember to change the ``k8s-apply-component.yaml`` to your own.
+
 
 .. code-block:: python
 
@@ -352,7 +368,7 @@ We can now define our final pipeline using above functions.
         spark_job_definition = get_spark_job_definition()
 
         # Load the kubernetes apply component
-        k8s_apply_op = comp.load_component_from_file("<k8s_apply_component_definition_yaml_file>")
+        k8s_apply_op = comp.load_component_from_file("k8s-apply-component.yaml")
 
         # Execute the apply command
         spark_job_op = k8s_apply_op(object=json.dumps(spark_job_definition))
@@ -376,11 +392,14 @@ We can now define our final pipeline using above functions.
 Compile the pipeline
 ^^^^^^^^^^^^^^^^^^^^
 
-Finally, we compile the pipeline using following codes:
+Finally, we compile the pipeline using following codes in the notebook:
 
 .. code-block:: python
 
     if __name__ == "__main__":
+        # Compile the pipeline
+        import kfp.compiler as compiler
+        import logging
         logging.basicConfig(level=logging.INFO)
         pipeline_func = spark_job_pipeline
         pipeline_filename = pipeline_func.__name__ + ".yaml"
