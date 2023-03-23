@@ -19,7 +19,7 @@ It is used widely for data-intensive processing tasks. It is a multi-language en
 science, and machine learning on single-node machines or clusters. It supports multiple powerful features such as streaming 
 data, SQL analytics, data science at scale and machine learning. 
 
-In this guide, we will walk you through an exmple to show how to integrate Spark into Kubeflow ML workflow.
+In this guide, we will walk you through an example to show how to integrate Spark into Kubeflow ML workflow.
 
 -------------
 Prerequisites
@@ -59,35 +59,35 @@ First create the YAML file for the service account.
     apiVersion: v1
     kind: ServiceAccount
     metadata:
-    name: spark-sa
-    namespace: admin
+      name: spark-sa
+      namespace: admin
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
-    namespace: admin
-    name: spark-role
+      namespace: admin
+      name: spark-role
     rules:
     - apiGroups: [""]
-    resources: ["pods", "services", "configmaps", "pods/log"]
-    verbs: ["create", "get", "watch", "list", "post", "delete", "patch"]
+      resources: ["pods", "services", "configmaps", "pods/log"]
+      verbs: ["create", "get", "watch", "list", "post", "delete", "patch"]
     - apiGroups: ["sparkoperator.k8s.io"]
-    resources: ["sparkapplications"]
-    verbs: ["create", "get", "watch", "list", "post", "delete", "patch"]
+      resources: ["sparkapplications"]
+      verbs: ["create", "get", "watch", "list", "post", "delete", "patch"]
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     metadata:
-    name: spark-role-binding
-    namespace: admin
+      name: spark-role-binding
+      namespace: admin
     subjects:
     - kind: ServiceAccount
-    name: spark-sa
-    namespace: admin
+      name: spark-sa
+      namespace: admin
     roleRef:
-    kind: Role
-    name: spark-role
-    apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: spark-role
+      apiGroup: rbac.authorization.k8s.io
 
 .. note::
     In this example, we create the service account under ``admin`` namespace. You may change that based on your own situation 
@@ -221,15 +221,15 @@ Define the *k8s apply component* using following YAML file:
     - {name: Kind, type: String}
     - {name: Object, type: JsonObject}
     metadata:
-    annotations:
+      annotations:
         author: Alexey Volkov <alexey.volkov@ark-kun.com>
     implementation:
-    container:
+      container:
         image: bitnami/kubectl:1.17.17
         command:
-        - bash
-        - -exc
-        - |
+          - bash
+          - -exc
+          - |
             object_path=$0
             output_name_path=$1
             output_kind_path=$2
@@ -240,10 +240,10 @@ Define the *k8s apply component* using following YAML file:
             kubectl apply -f "$object_path" --output=json > "$output_object_path"
             < "$output_object_path" jq '.metadata.name' --raw-output > "$output_name_path"
             < "$output_object_path" jq '.kind' --raw-output > "$output_kind_path"
-        - {inputPath: Object}
-        - {outputPath: Name}
-        - {outputPath: Kind}
-        - {outputPath: Object}
+          - {inputPath: Object}
+          - {outputPath: Name}
+          - {outputPath: Kind}
+          - {outputPath: Object}
 
 We will use this file in later :ref:`define pipeline` step.
 
@@ -271,15 +271,15 @@ The *k8s get component* is defined using following YAML file:
     - {name: ApplicationState, type: String}
     - {name: Object, type: JsonObject}
     metadata:
-    annotations:
+      annotations:
         author: Alexey Volkov <alexey.volkov@ark-kun.com>
     implementation:
-    container:
+      container:
         image: bitnami/kubectl:1.17.17
         command:
-        - bash
-        - -exc
-        - |
+          - bash
+          - -exc
+          - |
             object_name=$0
             object_type=$1
             output_name_path=$2
@@ -291,11 +291,11 @@ The *k8s get component* is defined using following YAML file:
             kubectl get "$object_type" "$object_name" --output=json > "$output_object_path"
             < "$output_object_path" jq '.metadata.name' --raw-output > "$output_name_path"
             < "$output_object_path" jq '.status.applicationState.state' --raw-output > "$output_state_path"
-        - {inputValue: Name}
-        - {inputValue: Kind}
-        - {outputPath: Name}
-        - {outputPath: ApplicationState}
-        - {outputPath: Object}
+          - {inputValue: Name}
+          - {inputValue: Kind}
+          - {outputPath: Name}
+          - {outputPath: ApplicationState}
+          - {outputPath: Object}
 
 Above executions are defined in following function:
 
