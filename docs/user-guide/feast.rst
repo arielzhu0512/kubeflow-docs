@@ -18,25 +18,45 @@ Feast (Feature Store) is a customizable operational data system that re-uses exi
 Prerequisites
 =============
 
-* You have already installed Kubeflow on your cluster (full or lite version).
+Make sure following prerequisites are fulfilled before starting this experiment:
 
-* You have installed `MinIO <https://min.io/docs/minio/kubernetes/upstream/index.html>`_  operator.
-
+* :ref:`install-ubuntu`
 * You can access the kubeflow dashboard.
 
-* You Have created Kubeflow Notebook refer to :ref:`user-guide-notebooks`.
+
+Obtain MinIO relative information
+=================================
+
+If you have already installed Kubeflow, and MinIO has installed together on your cluster.
+Let's obtain MinIO endpoint url, access and secret key for authentication. The MinIO relative information will be used later. In your terminal, run following commands:
+
+.. code-block:: shell
+
+    # get the endpoint url for MinIO
+    $ microk8s kubectl get svc minio -n kubeflow -o jsonpath='{.spec.clusterIP}'
+    
+    # get the secret name for Minio. your-namespace is admin for this microk8s cluster.
+    $ microk8s kubectl get secret -n <your-namespace> | grep minio
+
+    # get the access key for MinIO
+    $ microk8s kubectl get secret <minio-secret-name> -n <your-namespace> -o jsonpath='{.data.accesskey}' | base64 -d
+
+    # get the secret key for MinIO
+    $ microk8s kubectl get secret <minio-secret-name> -n <your-namespace> -o jsonpath='{.data.secretkey}' | base64 -d
 
 
 Getting started with Feast
 ==========================
 
-*You can run Feast module in Jupyter Notebook*
+Now, it’s time to get started Feast.
+
+Go to the Kubeflow UI in your browser. (If you follow the guide Install Kubeflow on Nimbus, you can access Kubeflow UI by going to ``http://10.64.140.43.nip.io``.) Connect or start a Notebook Server, and create a ``.ipynb`` file.
 
 This guide provides the necessary resources to install Feast alongside Kubeflow, describes the usage of Feast with Kubeflow components, and provides examples that users can follow to test their setup.
 
 Grab the `code examples <https://github.com/AmyHoney/feast-example/blob/master/03_feature_repo_s3_offline_sqlite_online/s3_online_explore_date.ipynb>`_ to know feast and use it: 
 
-* Setting up a feature repo using `MinIO <https://min.io/docs/minio/kubernetes/upstream/index.html>`_ S3 bucket about registry for offline features to train model.
+* Setting up a feature repo using MinIO S3 bucket about registry for offline features to train model.
 
 * Make predictions using online features by `SQLite <https://docs.feast.dev/reference/online-stores/sqlite>`_.
 
@@ -49,20 +69,26 @@ Before we get started, first install some dependencies and Feast:
 
 .. code-block:: shell
 
-    pip install scikit-learn
-    pip install "numpy>=1.16.5,<1.23.0"
-    pip install pyarrow
-    pip install fastparquet
-    pip install boto3
-    pip install s3fs
-    pip install feast==0.29.0
+    !pip install scikit-learn
+    !pip install "numpy>=1.16.5,<1.23.0"
+    !pip install pyarrow
+    !pip install fastparquet
+    !pip install boto3
+    !pip install s3fs
+    !pip install feast==0.29.0
 
+
+.. code-block:: shell
+
+    # fix: TypeError: cannot create weak reference to 'property' object
+    # reference: https://github.com/feast-dev/feast/issues/3538
+    !pip install typeguard==2.13.3
 
 ------------------
 Exploring the data
 ------------------
 
-We've made some dummy data for this workshop in `infra/driver_stats.parquet <https://github.com/AmyHoney/feast-example/blob/master/01_feature_repo_local/infra/driver_stats.parquet>`_. Let's dive into what the data looks like.
+We've made some dummy data for this workshop. You need to create ``infra`` folder and download `driver_stats.parquet <https://github.com/AmyHoney/feast-example/blob/master/01_feature_repo_local/infra/driver_stats.parquet>`_ file, put ``driver_stats.parquet`` file into ``infra`` folder. Let's dive into what the data looks like.
 
 .. code-block:: shell
 
@@ -74,24 +100,11 @@ We've made some dummy data for this workshop in `infra/driver_stats.parquet <htt
 
 This is a set of time-series data with driver_id as the primary key (representing the driver entity) and event_timestamp as showing when the event happened.
 
------------------------------------------------------------
-Access MinIO and setup bucket for registry and file sources
------------------------------------------------------------
+-----------------------------
+Upload data into MinIO bucket
+-----------------------------
 
-Firstly you need to get MinIO access and secret key for authentication.
-
-.. code-block:: shell
-
-    # get the Minio secret name
-    $ microk8s kubectl get secret -n admin | grep minio
-
-    # get the access key for MinIO
-    $ microk8s kubectl get secret <minio-secret-name> -n admin -o jsonpath='{.data.accesskey}' | base64 -d
-
-    # get the secret key for MinIO
-    $ microk8s kubectl get secret <minio-secret-name> -n admin -o jsonpath='{.data.secretkey}' | base64 -d
-
-Secondly update the MinIO parameters on your environment, create a bucket for feast and upload data files to bucket.
+You need to use your MinIO parameters obtained before to update the MinIO parameters, create a bucket for feast and upload data files to bucket.
 
 .. code-block:: shell
 
@@ -100,7 +113,7 @@ Secondly update the MinIO parameters on your environment, create a bucket for fe
     import boto3
 
     # Update these parameters about your environment
-    os.environ["FEAST_S3_ENDPOINT_URL"] = "http://minio.kubeflow:9000"
+    os.environ["FEAST_S3_ENDPOINT_URL"] = "http://<your_minio_endpoint_url>:9000"
     os.environ["AWS_ACCESS_KEY_ID"] = "<your_minio_access_key>"
     os.environ["AWS_SECRET_ACCESS_KEY"] = "<your_minio_secret_key>"
 
@@ -128,22 +141,15 @@ Secondly update the MinIO parameters on your environment, create a bucket for fe
 Setup the feature repo to register features
 -------------------------------------------
 
-The first thing needs to do is setup a ``feature_store.yaml`` file, and it is the primary way to configure an overall Feast project. We have setup a sample feature reposity in `03_feature_repo_s3_offline_sqlite_online <https://github.com/AmyHoney/feast-example/tree/master/03_feature_repo_s3_offline_sqlite_online>`_
+Let's setup a feature repo for the feast project.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 Setup the feature repo
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: shell
+New a python file like below screenshot to write **data_sources.py** file to load data from S3 storage.
 
-    feast init <your_feast_project_name>
-  
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Use your configured bucket
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Write **data_sources.py** file to load data from S3 storage
+.. image:: ../_static/user-guide-feast-new-python-file.jpg
 
 .. code-block:: shell
 
@@ -152,7 +158,7 @@ Write **data_sources.py** file to load data from S3 storage
 
     bucket_name = "featurestore"
     file_name = "driver_stats.parquet"
-    s3_endpoint = "http://minio.kubeflow:9000"
+    s3_endpoint = "http://<your_minio_endpoint_url>:9000"
 
     s3 = s3fs.S3FileSystem(key='<your_minio_access_key>',
                         secret='<your_minio_secret_key>',
@@ -161,14 +167,79 @@ Write **data_sources.py** file to load data from S3 storage
     driver_stats = FileSource(
         name="driver_stats_source",
         path="s3://featurestore/infra/driver_stats.parquet",  # TODO: Replace with your bucket
-        s3_endpoint_override="http://minio.kubeflow:9000", # TODO: Replace with your MinIO URL
+        s3_endpoint_override="http://<your_minio_endpoint_url>:9000", # TODO: Replace with your MinIO URL
         timestamp_field="event_timestamp",
         created_timestamp_column="created",
         description="A table describing the stats of a driver based on hourly logs",
         owner="test2@gmail.com",
     )
 
-Update **feature_store.yaml** to use yourself's S3 storage link
+New a python file to write **entities.py** to construct composite keys to join feature views together. 
+
+.. code-block:: shell
+
+    from feast import (
+        Entity,
+        ValueType,
+    )
+
+    driver = Entity(
+        name="driver",
+        join_keys=["driver_id"],
+        value_type=ValueType.INT64,
+        description="driver id",
+    )
+
+New a python file to write **features.py** to define the various feature views corresponding to different logical groups of features and transformations from data sources keyed on entities. 
+
+.. code-block:: shell
+
+    from datetime import timedelta
+
+    from feast import (
+        FeatureView,
+        Field,
+    )
+    from feast.types import Float32
+
+    from data_sources import *
+    from entities import *
+
+    driver_hourly_stats_view = FeatureView(
+        name="driver_hourly_stats",
+        description="Hourly features",
+        entities=[driver],
+        ttl=timedelta(seconds=8640000000),
+        schema=[
+            Field(name="conv_rate", dtype=Float32),
+            Field(name="acc_rate", dtype=Float32),
+        ],
+        online=True,
+        source=driver_stats,
+        tags={"production": "True"},
+        owner="test2@gmail.com",
+    )
+
+New a python file to write **feature_services.py** to build different model versions with different sets of features using feature services (``model_v1``, ``model_v2``).
+
+.. code-block:: shell
+
+    from feast import FeatureService
+
+    from features import *
+
+    feature_service = FeatureService(
+        name="model_v1",
+        features=[driver_hourly_stats_view[["conv_rate"]]],
+        owner="test3@gmail.com",
+    )
+
+    feature_service_2 = FeatureService(
+        name="model_v2", features=[driver_hourly_stats_view], owner="test3@gmail.com",
+    )
+
+
+New a YAML file to write **feature_store.yaml** contains a demo setup configuring where data sources are.
 
 .. code-block:: shell
 
@@ -204,7 +275,7 @@ With the ``feature_store.yaml`` setup, you can now run ``feast plan`` to see wha
 
 .. code-block:: shell
 
-    feast -c <your_feast_project_name>/feature_repo plan
+    !feast plan
 
 Sample output:
 
@@ -226,7 +297,7 @@ This will parse the feature, data source, and feature service definitions and pu
 
 .. code-block:: shell
 
-    feast -c <your_feast_project_name>/feature_repo apply
+    !feast apply
 
     # output
     02/22/2023 02:48:14 AM botocore.credentials INFO: Found credentials in environment variables.
@@ -246,7 +317,7 @@ You can now run Feast CLI commands to verify Feast knows about your features and
 
 .. code-block:: shell
 
-    feast -c <your_feast_project_name>/feature_repo feature-views list
+    !feast feature-views list
 
     # output
     02/22/2023 02:48:43 AM botocore.credentials INFO: Found credentials in environment variables.
@@ -260,48 +331,55 @@ Fetch offline features from S3 to train model
 
 ``get_historical_features`` is an API by which you can retrieve features (by referencing features directly or via feature services). It will under the hood manage point-in-time joins and avoid data leakage to generate training datasets.
 
-Fetch feature from `driver_orders.csv <https://github.com/AmyHoney/feast-example/blob/master/03_feature_repo_s3_offline_sqlite_online/driver_orders.csv>`_ data using ``get_historical_features`` API to train model.
+You need to do ``wget`` `driver_orders.csv <https://github.com/AmyHoney/feast-example/blob/master/03_feature_repo_s3_offline_sqlite_online/driver_orders.csv>`_ data.
 
 .. code-block:: shell
 
-  import feast
-  from joblib import dump
-  import pandas as pd
-  from sklearn.linear_model import LinearRegression
+    !wget https://raw.githubusercontent.com/AmyHoney/feast-example/master/01_feature_repo_local/driver_orders.csv
 
-  # Load driver order data, when orders give to entity_df, it shows 0 entries  
-  orders = pd.read_csv("driver_orders.csv", sep="\t")
-  orders["event_timestamp"] = pd.to_datetime(orders["event_timestamp"])
-  print(orders)
 
-  # Connect to your feature store provider
-  store = FeatureStore(repo_path="./feature_repo_minio_online")
+Using ``get_historical_features`` API to train model.
 
-  # Because we're using the default FileOfflineStore, this executes on your machine
-  training_df = store.get_historical_features(
-      entity_df=orders, 
-      features=store.get_feature_service("model_v2"),
-  ).to_df()
+.. code-block:: shell
 
-  print("----- Feature schema -----\n")
-  print(training_df.info())
+    from feast import FeatureStore
+    from joblib import dump
+    import pandas as pd
+    from sklearn.linear_model import LinearRegression
 
-  print()
-  print("----- Example features -----\n")
-  print(training_df.head())
+    # Load driver order data, when orders give to entity_df, it shows 0 entries
+    orders = pd.read_csv("driver_orders.csv", sep="\t")
+    orders["event_timestamp"] = pd.to_datetime(orders["event_timestamp"])
+    print(orders)
 
-  # Train model
-  target = "trip_completed"
+    # Connect to your feature store provider
+    store = FeatureStore(repo_path="./")
 
-  reg = LinearRegression()
-  train_X = training_df[training_df.columns.drop(target).drop("event_timestamp")]
-  train_Y = training_df.loc[:, target]
-  reg.fit(train_X[sorted(train_X)], train_Y)
+    # Because we're using the default FileOfflineStore, this executes on your machine
+    training_df = store.get_historical_features(
+        entity_df=orders,
+        features=store.get_feature_service("model_v2"),
+    ).to_df()
 
-  # Save model
-  dump(reg, "driver_model.bin")
+    print("----- Feature schema -----\n")
+    print(training_df.info())
 
-The output is like this, and the trained model file "driver_model.bin" is save as the current directory.
+    print()
+    print("----- Example features -----\n")
+    print(training_df.head())
+
+    # Train model
+    target = "trip_completed"
+
+    reg = LinearRegression()
+    train_X = training_df[training_df.columns.drop(target).drop("event_timestamp")]
+    train_Y = training_df.loc[:, target]
+    reg.fit(train_X[sorted(train_X)], train_Y)
+
+    # Save model
+    dump(reg, "driver_model.bin")
+
+The output should look like this and like below screenshot instead of the output is like this, and the trained model file "driver_model.bin" is save as the current directory.
 
 .. code-block:: shell
 
@@ -344,6 +422,8 @@ The output is like this, and the trained model file "driver_model.bin" is save a
   ['driver_model.bin']
 
 
+.. image:: ../_static/user-guide-feast-model-download.png
+
 --------------------------------------------
 Fetch online features from SQLite to predict
 --------------------------------------------
@@ -352,7 +432,7 @@ First we materialize features (which generate the latest values for each entity 
 
 .. code-block:: shell
 
-    feast -c <your_feast_project_name>/materialize-incremental $(date +%Y-%m-%d)
+    !feast materialize-incremental $(date +%Y-%m-%d)
 
 Now we can retrieve these materialized features from SQLite by directly using the SDK, load the trained model file before, to make prediction.
 
@@ -369,7 +449,7 @@ Now we can retrieve these materialized features from SQLite by directly using th
           self.model = load("driver_model.bin")
 
           # Set up feature store
-          self.fs = feast.FeatureStore(repo_path="./feature_repo_minio_online")
+          self.fs = feast.FeatureStore(repo_path="./")
 
       def predict(self, driver_ids):
           # Read features from Feast
