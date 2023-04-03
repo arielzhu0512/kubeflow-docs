@@ -60,6 +60,7 @@ This documentation presents a comprehensive end-to-end workflow of using Kubeflo
     :caption: Use Cases
     :hidden:
 
+    use-cases/index
     use-cases/helmet
 
 .. toctree::
