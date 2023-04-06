@@ -1,6 +1,8 @@
-==================
-Kubeflow Pipelines
-==================
+.. _kubeflow_pipelines:
+
+============
+ML Pipelines
+============
 
 .. toctree::
    :hidden:
