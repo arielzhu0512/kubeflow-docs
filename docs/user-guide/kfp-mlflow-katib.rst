@@ -31,7 +31,6 @@ The following diagram outlines ML workflow presented in this guide. Major pipeli
 Prerequisites
 -------------
 
-* Deployed Kubeflow instance including Katib, and access to Kubeflow dashboard. For sample Kubeflow deployment on Nimbus (only for VMware internal users) refer to :ref:`install-ubuntu`. More details on Kubeflow can be found here `Documentation | Kubeflow <https://www.kubeflow.org/docs/>`__.
 * Deployed MLFlow. For deployment of Charmed MLFlow refer to :ref:`user-guide-mlflow`.
 * Familiarity with Python, Docker, Jupyter notebooks.
 
@@ -206,8 +205,8 @@ Define Katib hyperparameter tuninig operation.
     def create_katib_experiment_op(experiment_name, experiment_namespace, bucket, key):
         import os
         
-        os.environ["AWS_ACCESS_KEY_ID"] = 'minio'
-        os.environ["AWS_SECRET_ACCESS_KEY"] = 'QXD9A2VA67DNAH9J7HMGDVGUUD0SJD'
+        os.environ["AWS_ACCESS_KEY_ID"] = '<your_minio_access_key>'
+        os.environ["AWS_SECRET_ACCESS_KEY"] = '<your_minio_secret_key>'
         
         # Trial count specification.
         max_trial_count = 5
