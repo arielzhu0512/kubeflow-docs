@@ -29,7 +29,7 @@ For the deployment on vSphere with Tanzu (TKGS), Kubeflow will be installed on a
 Deploy Kubeflow package on TKGS clusters
 ========================================
 
-Step 1: Add package repository
+Add package repository
 ------------------------------
 
 .. code-block:: shell
@@ -41,7 +41,7 @@ Step 1: Add package repository
 	  --repository kubeflow-carvel-repo \
 	  --url projects.registry.vmware.com/kubeflow/kubeflow-carvel-repo:1.6.1
 
-Step 2: Create ``config.yaml`` file
+Create ``config.yaml`` file
 -----------------------------------
 
 Create a ``config.yaml`` file which would be used in later Kubeflow installation.
@@ -61,7 +61,7 @@ Create a ``config.yaml`` file which would be used in later Kubeflow installation
 
     EOF
 
-Step 3: Install Kubeflow package
+Install Kubeflow package
 --------------------------------
 
 .. code-block:: shell
@@ -78,7 +78,7 @@ This may take a few minutes, so please wait patiently. You should see a "Succeed
 
     .. image:: ../_static/install-tkgs-deploySucceed.png
 
-Step 4: Access Kubeflow
+Access Kubeflow
 -----------------------
 
 Now, we are ready to access our deployed Kubeflow in browser and start our journey.
@@ -129,6 +129,8 @@ To access Kubeflow, we need to get the IP address. There are three options.
 You can then use the IP to access Kubeflow in browser.
 
     .. image:: ../_static/install-tkgs-login.png
+
+If you did not make any change to the Kubeflow configurations, the default login credentials is: ``user@example.com / 12341234``.
 
 For the first time you login after deployment, you would be guided to namespace creation page after login.
 
