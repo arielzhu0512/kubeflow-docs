@@ -45,7 +45,7 @@ On your Kubeflow UI, navigate to "Notebook", and connect to a Notebook Server. C
 the ``python`` codes in the rest of this documentation.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 1: Install MLMD library
+Install MLMD library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We start from installing MLMD library. There are three ways.
@@ -96,7 +96,7 @@ After installation, you can import the library in your notebook.
 .. _Storage backends and store connection configuration:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 2: Configure Metadata Store connection
+Configure Metadata Store connection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After installing and importing MLMD, we need to configure the Metadata Store connection.
@@ -159,7 +159,7 @@ there are three general options.
       store = metadata_store.MetadataStore(connection_config)
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 3: Integrate MLMD with ML Workflow
+Integrate MLMD with ML Workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this guide, we will introduce you to some basic concepts and understandings of MLMD usage by going through an example. We here 
