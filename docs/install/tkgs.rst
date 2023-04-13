@@ -215,13 +215,13 @@ To inspect values schema (configurations) of the Kubeflow package, run following
 
 We summarize some important values schema in below table.
 
-==================================== ======================================================================= ======== ==============================================================================================================================================
-Key 	  							 Default 																 Type     Description
-==================================== ======================================================================= ======== ==============================================================================================================================================
-CD_REGISTRATION_FLOW                 true                                                                    boolean  Turn on Registration Flow, so that Kubeflow Central Dashboard will prompt new users to create a namespace (profile)
-IP_address                           ""                                                                      string   EXTERNAL_IP address of istio-ingressgateway, valid only if service_type is LoadBalancer  
-service_type                         LoadBalancer                                                            string   Service type of istio-ingressgateway. Available options: "LoadBalancer" or "NodePort"
-==================================== ======================================================================= ======== ==============================================================================================================================================
+====================  ============ ======= ==================================================================================================================
+Key                   Default      Type    Description
+====================  ============ ======= ==================================================================================================================
+CD_REGISTRATION_FLOW  true         boolean Turn on Registration Flow, so that Kubeflow Central Dashboard will prompt new users to create a namespace (profile)
+IP_address            ""           string  EXTERNAL_IP address of istio-ingressgateway, valid only if service_type is LoadBalancer  
+service_type          LoadBalancer string  Service type of istio-ingressgateway. Available options: "LoadBalancer" or "NodePort"
+====================  ============ ======= ==================================================================================================================
 
 .. seealso::
 
