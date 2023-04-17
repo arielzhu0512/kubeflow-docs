@@ -28,8 +28,9 @@ In this tutorial, we'll use Feast to share features for training offline models,
 
 Grab the `code examples <https://github.com/feast-dev/feast-workshop/tree/main/module_0>`_ to learn how to use feast to help development.
 
-* Setting up a feature repo using MinIO S3 bucket about registry for offline features to train model.
-* Make predictions using online features by `SQLite <https://docs.feast.dev/reference/online-stores/sqlite>`_.
+* Set up a feature repo using MinIO S3 bucket for registry.
+* Use the offline features to train model.
+* Make predictions using online features by SQLite.
 
 
 Upload data to MinIO bucket
@@ -139,7 +140,7 @@ This step uploads data to MinIO buckets. You need to find the MinIO ``endpoint_u
     # get the secret key for MinIO
     $ kubectl get secret <minio-secret-name> -n <your-namespace> -o jsonpath='{.data.secretkey}' | base64 -d
 
-Now you can create a notebook refer to :ref:`user-guide-notebooks` to upload data to MinIO bucket using MinIO parameters obtained before to update the MinIO parameters.
+Now you can create a notebook refer to :ref:`user-guide-notebooks`, then upload data to MinIO bucket in the notebook server. 
 
 You need to install ``boto3`` dependency package in the notebook server created before, and run the follow python code to upload model files.
 
@@ -148,7 +149,7 @@ You need to install ``boto3`` dependency package in the notebook server created 
     !pip install boto3 -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 
-We've made some dummy data for this workshop. You need to create ``infra`` folder and download `driver_stats.parquet <https://github.com/AmyHoney/feast-example/blob/master/01_feature_repo_local/infra/driver_stats.parquet>`_ file, put ``driver_stats.parquet`` file into ``infra`` folder. Let's upload data to MinIO.
+We've made some dummy data for this workshop. You need to create ``infra`` folder and download `driver_stats.parquet <https://github.com/feast-dev/feast-workshop/blob/main/module_0/infra/driver_stats.parquet>`_ file, put ``driver_stats.parquet`` file into ``infra`` folder. Let's upload data to MinIO.
 
 .. code-block:: shell
 
@@ -201,7 +202,7 @@ Before we develop deeply, first install some dependencies and Feast in the noteb
 Exploring the data
 ------------------
 
- Let's dive into what the data looks like using the data `./infra/driver_stats.parquet <https://github.com/AmyHoney/feast-example/blob/master/01_feature_repo_local/infra/driver_stats.parquet>`_ downloaded before.
+Let's dive into what the data looks like using the data ``./infra/driver_stats.parquet`` downloaded before.
 
 .. code-block:: shell
 
@@ -405,11 +406,11 @@ Fetch offline features to train model
 
 Let's use ``get_historical_features`` API, it can retrieve features (by referencing features directly or via feature services). It will under the hood manage point-in-time joins and avoid data leakage to generate training datasets.
 
-You need to do ``wget`` `driver_orders.csv <https://github.com/AmyHoney/feast-example/blob/master/03_feature_repo_s3_offline_sqlite_online/driver_orders.csv>`_ data.
+You need to do ``wget`` `driver_orders.csv <https://github.com/feast-dev/feast-gcp-driver-ranking-tutorial/blob/master/driver_orders.csv>`_ data.
 
 .. code-block:: shell
 
-    !wget https://raw.githubusercontent.com/AmyHoney/feast-example/master/01_feature_repo_local/driver_orders.csv
+    !wget https://github.com/feast-dev/feast-gcp-driver-ranking-tutorial/blob/master/driver_orders.csv
 
 
 Using ``get_historical_features`` API to train model.
@@ -453,7 +454,7 @@ Using ``get_historical_features`` API to train model.
     # Save model
     dump(reg, "driver_model.bin")
 
-The output should look like this and like below screenshot instead of the output is like this, and the trained model file "driver_model.bin" is save as the current directory.
+The output should look like this and like below screenshot, and the trained model file "driver_model.bin" is save as the current directory.
 
 .. code-block:: shell
 
