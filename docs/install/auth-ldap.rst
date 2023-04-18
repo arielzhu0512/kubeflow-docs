@@ -152,37 +152,11 @@ A brief message introduces profiles,  and the user can name their profile and cl
 .. image:: ../_static/operation-guide-auth-ldap-login-namespace02.png
 
 -------------------------------------------------------
-Configure pod-security-policy for your own user profile
+Configure pod security policy for your own user profile
 -------------------------------------------------------
 
-Check your own user profile
-
-.. code-block:: shell
-
-    kubectl get profile
-    kubectl get serviceaccount,authorizationpolicies,rolebinding -n <namespace_name>
-
-Configure pod-security-policy tp give you access create pod in TKG. Or you will create Notebook pod: fail, and get warning  "FailedCreate  1s (x2 over 1s)     statefulset-controller  create Pod test-01-0 in StatefulSet test-01 failed error: pods "test-01-0" is forbidden: PodSecurityPolicy: unable to admit pod: []"
-
-.. code-block:: shell
-
-  cat << EOF | kubectl apply -f -
-  kind: RoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: rb-all-sa_ns-<namespace_name>
-    namespace: <namespace_name>
-  roleRef:
-    kind: ClusterRole
-    name: psp:vmware-system-privileged
-    apiGroup: rbac.authorization.k8s.io
-  subjects:
-  - kind: Group
-    apiGroup: rbac.authorization.k8s.io
-    name: system:serviceaccounts:<namespace_name>
-  EOF
-
-Now you can use your own user profile to run your applications!
+Before starting to use Kubeflow, remember to configure the pod security policy for your own user profile in order to create pods. This is important as pod creation is needed for many Kubeflow functions, such as Notebook Server creation. 
+Refer to :ref:`configure pod security policy` for more details and instructions.
 
 ---------------
 Troubleshooting
@@ -204,3 +178,15 @@ As follow example, we only allow liuqi and juanl these 2 users to login Kubeflow
         baseDN: ou=people,dc=vmware,dc=com
         filter: "(objectclass=inetOrgPerson)(|(uid=user1)(uid=user2))"
         ...
+
+""""""""""""""""""""
+Pod creation failure
+""""""""""""""""""""
+
+You may meet following error in some operation:
+
+.. code-block:: text
+
+    FailedCreate 1s (x2 over 1s) statefulset-controller create Pod test-01-0 in StatefulSet test-01 failed error: pods “test-01-0” is forbidden: PodSecurityPolicy: unable to admit pod: []
+
+This error occurs because you did not configure your pod security policy correctly. To solve this problem, you need to configure pod security policy based on :ref:`configure pod security policy`.

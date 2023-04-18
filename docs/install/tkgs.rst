@@ -142,6 +142,43 @@ You should then see the Kubeflow home page.
 
     .. image:: ../_static/install-tkgs-home.png
 
+.. _configure pod security policy:
+
+Configure pod permission and security policy
+--------------------------------------------
+
+For your first time deployment, you may need to configure pod permission and security policy in order to create and configure new pods. 
+This is important because pod creation is needed for many Kubeflow functions, such as Notebook Server creation.
+
+To check your own user profile:
+
+.. code-block:: shell
+
+    kubectl get profile
+    kubectl get serviceaccount,authorizationpolicies,rolebinding -n <namespace_name>
+
+And to configure ``pod-security-policy``, run following command in your VM:
+
+.. code-block:: shell
+
+    cat << EOF | kubectl apply -f -
+    kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: rb-all-sa_ns-<namespace_name>
+      namespace: <namespace_name>
+    roleRef:
+      ind: ClusterRole
+      name: psp:vmware-system-privileged
+      apiGroup: rbac.authorization.k8s.io
+    subjects:
+    - kind: Group
+      apiGroup: rbac.authorization.k8s.io
+      name: system:serviceaccounts:<namespace_name>
+    EOF
+
+**Note:** Remember to replace ``namespace_name`` to the namespace that you would work in.
+
 Troubleshooting
 ===============
 
@@ -226,6 +263,17 @@ CD_REGISTRATION_FLOW  true         boolean Turn on Registration Flow, so that Ku
 IP_address            ""           string  EXTERNAL_IP address of istio-ingressgateway, valid only if service_type is LoadBalancer  
 service_type          LoadBalancer string  Service type of istio-ingressgateway. Available options: "LoadBalancer" or "NodePort"
 ====================  ============ ======= ==================================================================================================================
+
+Notebook Server creation failure
+--------------------------------
+
+When you try to create a Notebook Server, you may meet following error:
+
+.. code-block:: text
+
+    FailedCreate 1s (x2 over 1s) statefulset-controller create Pod test-01-0 in StatefulSet test-01 failed error: pods “test-01-0” is forbidden: PodSecurityPolicy: unable to admit pod: []
+
+This error occurs because Notebook Server creation needs pod creation, and you did not configure the pod security policy correctly. To solve this error, you need to configure pod security policy based on :ref:`configure pod security policy`.
 
 .. seealso::
 
