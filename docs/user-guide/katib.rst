@@ -1,6 +1,10 @@
-======
-AutoML
-======
+=====================
+Hyperparameter Tuning
+=====================
+
+------------
+Introduction
+------------
 
 We would use **Katib** for hyperparameter tuning. Katib is a Kubernetes-native project for automated machine learning (AutoML). 
 It supports hyperparameter tuning, early stopping and neural architecture search (NAS). It can tune hyperparameters of applications 
@@ -16,8 +20,13 @@ the constraints used for the optimization, and an algorithm that is used to find
 
 In this guide, we would show two ways to run Katib experiments.
 
+-----------
+Get Started
+-----------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Run Katib experiments from CLI
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Katib experiments can be ran through Kubeflow UI.
 
@@ -49,8 +58,9 @@ Katib experiments would then start to run. We can inspect experiment progress us
 
     kubectl -n kubeflow get experiment grid-example -o yaml
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Run Katib experiments from Kubeflow UI
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We can also use the Kubeflow UI to run Katib experiments. 
 
@@ -161,10 +171,5 @@ and the optimal metrics.
     .. image:: ../_static/user-guide-katib-result.png
 
 .. note:: 
-    the experiment may take some time to finish, maybe from 30 minutes to about 2 hours.
-
-.. seealso::
-
-    `Get started with Charmed Kubeflow <https://charmed-kubeflow.io/docs/get-started-with-charmed-kubeflow>`_
-
+    The experiment may take some time to finish, maybe from 30 minutes to about 2 hours.
 
