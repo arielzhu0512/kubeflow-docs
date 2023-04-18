@@ -44,9 +44,9 @@ Get started
 On your Kubeflow UI, navigate to "Notebook", and connect to a Notebook Server. Create a notebook (``.ipynb`` file) to hold and execute 
 the ``python`` codes in the rest of this documentation.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 1: Install MLMD library
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
+Install MLMD library
+^^^^^^^^^^^^^^^^^^^^
 
 We start from installing MLMD library. There are three ways.
 
@@ -95,9 +95,9 @@ After installation, you can import the library in your notebook.
 
 .. _Storage backends and store connection configuration:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 2: Configure Metadata Store connection
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configure Metadata Store connection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After installing and importing MLMD, we need to configure the Metadata Store connection.
 
@@ -158,9 +158,9 @@ there are three general options.
       connection_config.mysql.password = '...'
       store = metadata_store.MetadataStore(connection_config)
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 3: Integrate MLMD with ML Workflow
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Integrate MLMD with ML Workflow
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this guide, we will introduce you to some basic concepts and understandings of MLMD usage by going through an example. We here 
 provide you with a typical ML workflow and and will show you how to use the low-level MLMD APIs to track the execution of a training 

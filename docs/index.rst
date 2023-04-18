@@ -37,6 +37,7 @@ This documentation presents a comprehensive end-to-end workflow of using vSphere
     install/index
     install/tkgs
     install/auth
+    install/monitor
 
 .. toctree::
     :caption: User Guide
